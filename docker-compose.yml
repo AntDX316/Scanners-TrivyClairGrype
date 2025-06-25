@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Clair vulnerability database
+  clair-db:
+    container_name: clair-postgres-db
+    image: postgres:13
+    environment:
+      POSTGRES_DB: clair
+      POSTGRES_USER: clair
+      POSTGRES_PASSWORD: clair
+    volumes:
+      - clair_db_data:/var/lib/postgresql/data
+    networks:
+      - clair-network
+
+  # Clair vulnerability scanner
+  clair:
+    container_name: clair-vulnerability-scanner
+    image: quay.io/coreos/clair:v4.7.4
+    depends_on:
+      - clair-db
+    ports:
+      - "6060:6060"
+      - "6061:6061"
+    environment:
+      CLAIR_CONF: /etc/clair/config.yaml
+      CLAIR_MODE: combo
+    volumes:
+      - ./clair-config.yaml:/etc/clair/config.yaml:ro
+    networks:
+      - clair-network
+    command: ["clair"]
+
+  # Optional: Clair scanner for easier image scanning
+  clairctl:
+    container_name: clair-control-tool
+    image: quay.io/coreos/clairctl:v4.7.4
+    depends_on:
+      - clair
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./clairctl-config.yaml:/etc/clairctl/config.yaml:ro
+    networks:
+      - clair-network
+    profiles:
+      - tools
+
+volumes:
+  clair_db_data:
+
+networks:
+  clair-network:
+    driver: bridge
