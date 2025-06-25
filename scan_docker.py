@@ -218,6 +218,11 @@ class DockerVulnerabilityScanner:
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
         tr:hover {{ background-color: #f5f5f5; }}
         .no-results {{ text-align: center; color: #666; font-style: italic; padding: 40px; }}
+        .description {{ max-width: 300px; cursor: help; position: relative; }}
+        .description:hover .tooltip {{ visibility: visible; opacity: 1; }}
+        .tooltip {{ visibility: hidden; opacity: 0; position: absolute; z-index: 1000; bottom: 125%; left: 50%; margin-left: -150px; width: 300px; background-color: #333; color: white; text-align: center; border-radius: 6px; padding: 10px; transition: opacity 0.3s; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }}
+        .tooltip::after {{ content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }}
+        @media (max-width: 768px) {{ .description {{ max-width: 200px; }} .tooltip {{ width: 250px; margin-left: -125px; }} }}
         .footer {{ text-align: center; margin-top: 40px; padding: 20px; border-top: 2px solid #e0e0e0; color: #666; }}
         .footer a {{ color: #667eea; text-decoration: none; font-weight: bold; }}
         .footer a:hover {{ color: #764ba2; }}
@@ -332,12 +337,13 @@ class DockerVulnerabilityScanner:
             for vuln in result.get('Vulnerabilities', [])[:20]:  # Limit to first 20
                 severity = vuln.get('Severity', 'UNKNOWN')
                 severity_class = severity.lower()
+                description = vuln.get('Description', 'N/A')
                 html += f"""
                 <tr>
                     <td>{vuln.get('PkgName', 'N/A')}</td>
                     <td>{vuln.get('VulnerabilityID', 'N/A')}</td>
                     <td class="{severity_class}">{severity}</td>
-                    <td>{vuln.get('Description', 'N/A')[:100]}...</td>
+                    <td class="description">{description[:100]}<span class="tooltip">{description}</span></td>
                 </tr>
                 """
         
@@ -349,20 +355,21 @@ class DockerVulnerabilityScanner:
         if not data or 'matches' not in data:
             return '<div class="no-results">No Grype results available</div>'
         
-        html = "<table><tr><th>Package</th><th>Vulnerability</th><th>Severity</th><th>Fix Available</th></tr>"
+        html = "<table><tr><th>Package</th><th>Vulnerability</th><th>Severity</th><th>Description</th></tr>"
         
         for match in data.get('matches', [])[:20]:  # Limit to first 20
             vuln = match.get('vulnerability', {})
             artifact = match.get('artifact', {})
             severity = vuln.get('severity', 'UNKNOWN')
             severity_class = severity.lower()
+            description = vuln.get('description', 'N/A')
             
             html += f"""
             <tr>
                 <td>{artifact.get('name', 'N/A')}</td>
                 <td>{vuln.get('id', 'N/A')}</td>
                 <td class="{severity_class}">{severity}</td>
-                <td>{'Yes' if vuln.get('fix') else 'No'}</td>
+                <td class="description">{description[:100]}<span class="tooltip">{description}</span></td>
             </tr>
             """
         
@@ -379,12 +386,13 @@ class DockerVulnerabilityScanner:
         for vuln in data.get('Vulnerabilities', [])[:20]:  # Limit to first 20
             severity = vuln.get('Severity', 'UNKNOWN')
             severity_class = severity.lower()
+            description = vuln.get('Description', 'N/A')
             html += f"""
             <tr>
                 <td>{vuln.get('FeatureName', 'N/A')}</td>
                 <td>{vuln.get('Name', 'N/A')}</td>
                 <td class="{severity_class}">{severity}</td>
-                <td>{vuln.get('Description', 'N/A')[:100]}...</td>
+                <td class="description">{description[:100]}<span class="tooltip">{description}</span></td>
             </tr>
             """
         
