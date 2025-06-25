@@ -2,7 +2,15 @@
 
 🚀 **One command to run all three vulnerability scanners using Docker - no local installation required!**
 
-A comprehensive vulnerability scanning solution that integrates three powerful security scanners to analyze your applications, container images, and codebases.
+Scanners-TrivyClairGrype is a comprehensive, zero-installation vulnerability scanning solution that integrates three powerful security scanners (Trivy, Clair, and Grype) into a single command.
+
+Simply run 
+.\run_all.bat
+ on Windows or 
+./run_all.sh
+ on Mac/Linux to automatically scan your codebase, Docker images, or directories for vulnerabilities, secrets, and misconfigurations using Docker containers - no local installation required.
+ 
+ The tool generates a combined HTML report with findings from all three scanners, making it perfect for developers, DevOps teams, and security professionals who want enterprise-grade vulnerability scanning without the complexity of setting up multiple tools individually.
 
 ## 🎯 **Quick Start - Single Command**
 
