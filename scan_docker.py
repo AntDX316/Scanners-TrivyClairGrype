@@ -218,6 +218,9 @@ class DockerVulnerabilityScanner:
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
         tr:hover {{ background-color: #f5f5f5; }}
         .no-results {{ text-align: center; color: #666; font-style: italic; padding: 40px; }}
+        .footer {{ text-align: center; margin-top: 40px; padding: 20px; border-top: 2px solid #e0e0e0; color: #666; }}
+        .footer a {{ color: #667eea; text-decoration: none; font-weight: bold; }}
+        .footer a:hover {{ color: #764ba2; }}
     </style>
 </head>
 <body>
@@ -270,6 +273,10 @@ class DockerVulnerabilityScanner:
                 <div class="scanner-title">🐳 Clair Results</div>
             </div>
             {self.format_clair_results(clair_data)}
+        </div>
+        
+        <div class="footer">
+            <p>👍 Made with ❤️ by <a href="https://github.com/AntDX316">@AntDX316</a></p>
         </div>
     </div>
 </body>
