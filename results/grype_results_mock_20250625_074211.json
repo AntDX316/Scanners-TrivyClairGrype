@@ -1,0 +1,82 @@
+{
+  "matches": [
+    {
+      "vulnerability": {
+        "id": "CVE-2023-1234",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-1234",
+        "severity": "Critical",
+        "description": "Buffer overflow vulnerability in libssl allowing remote code execution through crafted TLS handshake."
+      },
+      "artifact": {
+        "name": "libssl1.1",
+        "version": "1.1.1f-1ubuntu2.16",
+        "type": "deb",
+        "locations": [
+          {
+            "path": "/var/lib/dpkg/status"
+          }
+        ]
+      },
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "dpkg-matcher",
+          "searchedBy": {
+            "distro": {
+              "type": "ubuntu",
+              "version": "20.04"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "vulnerability": {
+        "id": "CVE-2023-5678",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-5678",
+        "severity": "High",
+        "description": "SQL injection vulnerability in database connector allowing unauthorized data access."
+      },
+      "artifact": {
+        "name": "mysql-connector",
+        "version": "8.0.25",
+        "type": "python",
+        "locations": [
+          {
+            "path": "/usr/local/lib/python3.8/site-packages"
+          }
+        ]
+      },
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "python-matcher"
+        }
+      ]
+    },
+    {
+      "vulnerability": {
+        "id": "CVE-2023-9012",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-9012",
+        "severity": "Medium",
+        "description": "Cross-site scripting (XSS) vulnerability in web framework template engine."
+      },
+      "artifact": {
+        "name": "jinja2",
+        "version": "2.11.3",
+        "type": "python",
+        "locations": [
+          {
+            "path": "/usr/local/lib/python3.8/site-packages"
+          }
+        ]
+      },
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "python-matcher"
+        }
+      ]
+    }
+  ]
+}

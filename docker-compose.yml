@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Clair vulnerability database
   clair-db:
@@ -13,38 +11,49 @@ services:
       - clair_db_data:/var/lib/postgresql/data
     networks:
       - clair-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clair"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    profiles:
+      - clair
 
-  # Clair vulnerability scanner
+  # Note: Official Clair images may not be available
+  # This is an alternative implementation
   clair:
     container_name: clair-vulnerability-scanner
-    image: quay.io/coreos/clair:v4.7.4
+    image: arminc/clair-local-scan:latest
     depends_on:
-      - clair-db
+      clair-db:
+        condition: service_healthy
     ports:
       - "6060:6060"
       - "6061:6061"
     environment:
-      CLAIR_CONF: /etc/clair/config.yaml
-      CLAIR_MODE: combo
-    volumes:
-      - ./clair-config.yaml:/etc/clair/config.yaml:ro
-    networks:
-      - clair-network
-    command: ["clair"]
-
-  # Optional: Clair scanner for easier image scanning
-  clairctl:
-    container_name: clair-control-tool
-    image: quay.io/coreos/clairctl:v4.7.4
-    depends_on:
-      - clair
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./clairctl-config.yaml:/etc/clairctl/config.yaml:ro
+      POSTGRES_HOST: clair-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: clair
+      POSTGRES_PASSWORD: clair
+      POSTGRES_DB: clair
     networks:
       - clair-network
     profiles:
-      - tools
+      - clair
+
+  # Optional: Clair scanner for easier image scanning
+  #clairctl:
+  #  container_name: clair-control-tool
+  #  image: quay.io/coreos/clair:latest
+  #  depends_on:
+  #    - clair
+  #  volumes:
+  #    - ./clair-config.yaml:/etc/clair/config.yaml:ro
+  #  networks:
+  #    - clair-network
+  #  command: ["clairctl", "--config", "/etc/clair/config.yaml"]
+  #  profiles:
+  #    - tools
 
 volumes:
   clair_db_data:

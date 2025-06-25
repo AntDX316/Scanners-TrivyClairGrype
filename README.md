@@ -24,7 +24,7 @@ Simply run
 ./run_all.sh
 ```
 
-### Or directly
+### Or directly (from within your codebase directory)
 ```bash
 python scan_docker.py .
 ```
@@ -63,15 +63,28 @@ docker stop trivy-scanner-20250625_070015
 
 ## 🔍 **What Gets Scanned**
 
-### ✨ **YES - Scans your entire codebase!**
+### ✨ **Comprehensive Coverage with Trivy + Grype**
 
 - 📁 **Source code** (vulnerabilities in dependencies)
-- 🔒 **Secrets** (API keys, passwords hardcoded in code)
+- 🔒 **Secrets** (API keys, passwords hardcoded in code) - *Trivy only*
 - 📦 **Package managers** (npm, pip, maven, gradle, composer, etc.)
-- 📋 **Configuration files** (Dockerfile, Kubernetes YAML, Terraform)
-- 🐳 **Container images** (Docker, OCI)
-- 🔗 **Git repositories** (local and remote)
-- 🗃️ **Filesystem** (OS packages, libraries)
+- 📋 **Configuration files** (Dockerfile, Kubernetes YAML, Terraform) - *Trivy only*
+- 🐳 **Container images** (OS and application vulnerabilities)
+- 📊 **Software Bill of Materials (SBOM)** - *Trivy only*
+
+### 🎯 **Scanner Comparison**
+
+| Feature | Trivy | Grype | Clair |
+|---------|-------|-------|-------|
+| **Dependencies** | ✅ | ✅ | ✅ |
+| **Secrets** | ✅ | ❌ | ❌ |
+| **Configs** | ✅ | ❌ | ❌ |
+| **Git Repos** | ✅ | ❌ | ❌ |
+| **Containers** | ✅ | ✅ | ✅ |
+| **Speed** | Fast | Very Fast | Consistent |
+| **Setup** | Easy | Easy | Optional |
+
+**💡 Recommendation**: Trivy + Grype provide excellent coverage for most security needs. Clair is optional for specialized container analysis.
 
 ## 📋 **Requirements**
 
@@ -114,9 +127,19 @@ docker stop trivy-scanner-20250625_070015
 results/
 ├── trivy_results_TIMESTAMP.json
 ├── grype_results_TIMESTAMP.json
-├── combined_report_TIMESTAMP.html  ← Opens automatically
-└── clair_running (if Clair started)
+├── clair_results_TIMESTAMP.json (when available)
+└── combined_report_TIMESTAMP.html  ← Opens automatically
 ```
+
+## 🧪 **Test with Mock Data**
+
+Want to see how the reports look with vulnerabilities? Run the test script:
+
+```bash
+python test_with_mock_data.py
+```
+
+This generates realistic vulnerability data for all three scanners so you can see the beautiful table formatting and severity color coding in action!
 
 ## 🚀 **Alternative: Just Use Trivy (Easiest)**
 
