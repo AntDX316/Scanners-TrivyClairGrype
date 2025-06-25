@@ -218,11 +218,11 @@ class DockerVulnerabilityScanner:
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
         tr:hover {{ background-color: #f5f5f5; }}
         .no-results {{ text-align: center; color: #666; font-style: italic; padding: 40px; }}
-        .description {{ max-width: 300px; cursor: help; position: relative; }}
+        .description {{ max-width: 400px; cursor: help; position: relative; word-wrap: break-word; }}
         .description:hover .tooltip {{ visibility: visible; opacity: 1; }}
-        .tooltip {{ visibility: hidden; opacity: 0; position: absolute; z-index: 1000; bottom: 125%; right: 0; width: 300px; background-color: #333; color: white; text-align: left; border-radius: 6px; padding: 10px; transition: opacity 0.3s; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }}
+        .tooltip {{ visibility: hidden; opacity: 0; position: absolute; z-index: 1000; bottom: 125%; right: 0; width: 350px; background-color: #333; color: white; text-align: left; border-radius: 6px; padding: 10px; transition: opacity 0.3s; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }}
         .tooltip::after {{ content: ""; position: absolute; top: 100%; right: 20px; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }}
-        @media (max-width: 768px) {{ .description {{ max-width: 200px; }} .tooltip {{ width: 250px; right: -25px; }} }}
+        @media (max-width: 768px) {{ .description {{ max-width: 250px; }} .tooltip {{ width: 280px; right: -25px; }} }}
         .footer {{ text-align: center; margin-top: 40px; padding: 10px 20px; border-top: 2px solid #e0e0e0; color: #666; }}
         .footer a {{ color: #667eea; text-decoration: none; font-weight: bold; }}
         .footer a:hover {{ color: #764ba2; }}
