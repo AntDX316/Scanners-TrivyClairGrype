@@ -370,3 +370,7 @@ Feel free to submit issues and enhancement requests!
 ---
 
 **🎉 Ready to scan? Just run `.\run_all.bat` (Windows) or `./run_all.sh` (Mac/Linux)!**
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for full details.
