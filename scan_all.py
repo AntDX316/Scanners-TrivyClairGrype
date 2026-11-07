@@ -135,6 +135,7 @@ class VulnerabilityScanner:
 <body>
     <div class="header">
         <h1>Vulnerability Scan Report</h1>
+        <p>Made by <a href="https://github.com/AntDX316">@AntDX316</a></p>
         <p><strong>Target:</strong> {escape(self.target)}</p>
         <p><strong>Scan Date:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
     </div>
