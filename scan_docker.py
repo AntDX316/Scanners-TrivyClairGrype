@@ -10,6 +10,7 @@ import json
 import subprocess
 import argparse
 from html import escape
+from scanner_images import IMAGES
 from reporting import trivy_report, grype_report, clair_report
 from datetime import datetime
 from pathlib import Path
@@ -26,7 +27,7 @@ class DockerVulnerabilityScanner:
     def check_docker(self):
         """Check if Docker is available"""
         try:
-            result = subprocess.run(["docker", "info", "--format", "{{.ServerVersion}}"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True, timeout=900)
+            result = subprocess.run(["docker", "info", "--format", "{{.ServerVersion}}"], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True, timeout=getattr(getattr(self, "args", None), "timeout", 900))
             print(f" Docker found: {result.stdout.strip()}")
             return True
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
@@ -47,9 +48,11 @@ class DockerVulnerabilityScanner:
                     "docker", "run", "--rm",
                     "--name", f"trivy-scanner-{self.timestamp}",
                     "-v", f"{self.output_dir.absolute()}:/output",
-                    "aquasec/trivy:latest",
+                    "-v", "security-trivy-cache:/root/.cache/trivy",
+                    IMAGES["trivy"],
                     "repo", self.target,
-                    "--scanners", "vuln,secret,misconfig",
+                    "--scanners", "vuln,secret,misconfig,license",
+                    "--license-full",
                     "--format", "json",
                     "--output", f"/output/trivy_results_{self.timestamp}.json"
                 ]
@@ -61,9 +64,14 @@ class DockerVulnerabilityScanner:
                     "--name", f"trivy-scanner-{self.timestamp}",
                     "-v", f"{target_abs}:/workspace:ro",
                     "-v", f"{self.output_dir.absolute()}:/output",
-                    "aquasec/trivy:latest",
+                    "-v", "security-trivy-cache:/root/.cache/trivy",
+                    IMAGES["trivy"],
                     "fs", "/workspace",
-                    "--scanners", "vuln,secret,misconfig",
+                    "--skip-dirs", ".git",
+                    "--skip-dirs", ".security-baseline",
+                    "--skip-dirs", self.output_dir.name,
+                    "--scanners", "vuln,secret,misconfig,license",
+                    "--license-full",
                     "--format", "json",
                     "--output", f"/output/trivy_results_{self.timestamp}.json"
                 ]
@@ -73,14 +81,16 @@ class DockerVulnerabilityScanner:
                     "docker", "run", "--rm",
                     "--name", f"trivy-scanner-{self.timestamp}",
                     "-v", f"{self.output_dir.absolute()}:/output",
-                    "aquasec/trivy:latest",
+                    "-v", "security-trivy-cache:/root/.cache/trivy",
+                    IMAGES["trivy"],
                     "image", self.target,
-                    "--scanners", "vuln,secret,misconfig",
+                    "--scanners", "vuln,secret,misconfig,license",
+                    "--license-full",
                     "--format", "json",
                     "--output", f"/output/trivy_results_{self.timestamp}.json"
                 ]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=True, timeout=900)
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=True, timeout=getattr(getattr(self, "args", None), "timeout", 900))
             if "Results" not in self.load_json_file(output_file):
                 print("Trivy returned missing or invalid JSON results")
                 return None
@@ -88,6 +98,8 @@ class DockerVulnerabilityScanner:
             return output_file
 
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
+            if isinstance(e, subprocess.TimeoutExpired):
+                subprocess.run(["docker", "rm", "-f", "trivy-scanner-" + self.timestamp], capture_output=True, timeout=30)
             print(f" Trivy scan failed: {e}")
             print(f"Error output: {getattr(e, 'stderr', '')}")
             return None
@@ -112,7 +124,10 @@ class DockerVulnerabilityScanner:
                     "--name", f"grype-scanner-{self.timestamp}",
                     "-v", f"{target_abs}:/workspace:ro",
                     "-v", f"{self.output_dir.absolute()}:/output",
-                    "anchore/grype:latest",
+                    "-e", "GRYPE_DB_CACHE_DIR=/cache",
+                    "-e", "GRYPE_EXCLUDE=**/.security-baseline/**,**/" + self.output_dir.name + "/**",
+                    "-v", "security-grype-cache:/cache",
+                    IMAGES["grype"],
                     "dir:/workspace",
                     "-o", "json",
                     "--file", f"/output/{output_file}"
@@ -123,13 +138,16 @@ class DockerVulnerabilityScanner:
                     "docker", "run", "--rm",
                     "--name", f"grype-scanner-{self.timestamp}",
                     "-v", f"{self.output_dir.absolute()}:/output",
-                    "anchore/grype:latest",
+                    "-e", "GRYPE_DB_CACHE_DIR=/cache",
+                    "-e", "GRYPE_EXCLUDE=**/.security-baseline/**,**/" + self.output_dir.name + "/**",
+                    "-v", "security-grype-cache:/cache",
+                    IMAGES["grype"],
                     self.target,
                     "-o", "json",
                     "--file", f"/output/{output_file}"
                 ]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=True, timeout=900)
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=True, timeout=getattr(getattr(self, "args", None), "timeout", 900))
             if "matches" not in self.load_json_file(self.output_dir / output_file):
                 print("Grype returned missing or invalid JSON results")
                 return None
@@ -137,6 +155,8 @@ class DockerVulnerabilityScanner:
             return self.output_dir / output_file
 
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
+            if isinstance(e, subprocess.TimeoutExpired):
+                subprocess.run(["docker", "rm", "-f", "grype-scanner-" + self.timestamp], capture_output=True, timeout=30)
             print(f"  Grype scan failed: {e}")
             print("  Trivy scan results are still available")
             return None
@@ -184,7 +204,7 @@ class DockerVulnerabilityScanner:
             else:
                 print(" Clair scan failed or no results")
                 print(" This is normal - Clair requires complex setup")
-                print(" Trivy + Grype provide excellent coverage (95% of security needs)")
+                print("Clair coverage is unavailable; review scanner status.")
                 return None
 
         except subprocess.TimeoutExpired:
@@ -380,16 +400,9 @@ class DockerVulnerabilityScanner:
         return 2 if (not trivy_file or (required_grype and not grype_file) or (self.clair and not clair_file)) else 0
 
 def main():
-    parser = argparse.ArgumentParser(description="Run all vulnerability scanners using Docker")
-    parser.add_argument("target", help="Target to scan (image, directory, or repository)")
-    parser.add_argument("--output", "-o", default="results", help="Output directory for results")
+    from security_scan import main as extended_main
+    return extended_main()
 
-    parser.add_argument("--clair", action="store_true", help="Opt into legacy Clair image scanning (requires server)")
-    parser.add_argument("--no-browser", action="store_true", help="Do not open the report")
-    args = parser.parse_args()
-
-    scanner = DockerVulnerabilityScanner(args.target, args.output, clair=args.clair, open_browser=not args.no_browser)
-    return scanner.scan_all()
 
 if __name__ == "__main__":
     sys.exit(main())
