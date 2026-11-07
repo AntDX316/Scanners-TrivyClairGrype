@@ -269,7 +269,8 @@ class DockerVulnerabilityScanner:
     <div class="container">
         <div class="header">
             <h1>🔒 Vulnerability Scan Report</h1>
-            <p><strong>Target:</strong> {escape(self.target)}</p>
+            <p>Made by <a href="https://github.com/AntDX316">@AntDX316</a></p>
+        <p><strong>Target:</strong> {escape(self.target)}</p>
             <p><strong>Scan Date:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
             <p><strong>Method:</strong> Docker Containers (No Local Installation)</p>
         </div>
@@ -318,7 +319,7 @@ class DockerVulnerabilityScanner:
         </div>
 
         <div class="footer">
-            <p>👍 Made with ❤️ by <a href="https://github.com/AntDX316">@AntDX316</a></p>
+            <p>Made by <a href="https://github.com/AntDX316">@AntDX316</a></p>
         </div>
     </div>
 </body>
