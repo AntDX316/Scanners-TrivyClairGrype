@@ -1,5 +1,9 @@
 # SecurityScan-Suite
 
+![SecurityScan-Suite example report](docs/preview.jpg)
+
+*Example report from a test fixture.*
+
 One command runs Docker-based dependency, code, secret-history, configuration, and license analysis. An optional web target adds OWASP ZAP. Reports combine scanner evidence, prioritize remediation, and compare against previous scans.
 
 **Requirements:** Python 3.9+, a running Linux Docker engine, network access for vulnerability databases/rules, and Git for remote repository targets. No Python packages are required. Source is mounted read-only. Official scanner images are pinned by digest in `scanner_images.py`; Trivy and Grype databases use persistent Docker cache volumes.
