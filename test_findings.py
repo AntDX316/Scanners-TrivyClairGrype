@@ -56,6 +56,15 @@ class FindingsTests(unittest.TestCase):
         self.assertIn('abc', rows[0]['fix'])
         self.assertEqual(rows[0]['kind'], 'secret-history')
 
+    def test_changed_secret_at_same_location_is_new(self):
+        def secret(value):
+            return normalize('trivy', {'Results': [{'Target': 'demo.env', 'Secrets': [
+                {'RuleID': 'token', 'Severity': 'HIGH', 'Match': value, 'StartLine': 1}]}]})
+        before = consolidate(secret('disposable-value-one'))
+        after = consolidate(secret('disposable-value-two'), {'findings': before})
+        self.assertEqual(after[0]['status'], 'new')
+        self.assertNotIn('disposable-value-two', json.dumps(after))
+
     def test_semgrep_source_is_not_exported(self):
         rows = normalize('semgrep', {'results': [{'check_id': 'shell', 'path': '/workspace/app.py', 'start': {'line': 4}, 'extra': {'severity': 'ERROR', 'message': 'Shell injection', 'lines': 'SECRET SOURCE'}}]})
         self.assertEqual(rows[0]['severity'], 'HIGH')

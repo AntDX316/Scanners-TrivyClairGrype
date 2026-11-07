@@ -80,7 +80,7 @@ python scan_docker.py . --baseline previous-report.json --fail-on HIGH --only-ne
 python scan_docker.py . --fail-on HIGH --only-fixable --no-browser
 ```
 
-Without a baseline, findings are `uncompared`. With a baseline they are `new` or `existing`; absent fingerprints are counted separately in JSON. Absence is not proof of resolution if coverage changed or a scanner failed. Package-version changes intentionally produce new fingerprints. `--only-new` requires a baseline with the same target string. `--only-fixable` means remediation text is present, not that an upgrade is guaranteed safe.
+Without a baseline, findings are `uncompared`. With a baseline they are `new` or `existing`; absent fingerprints are counted separately in JSON. Absence is not proof of resolution if coverage changed or a scanner failed. Package-version changes intentionally produce new fingerprints. Secret fingerprints incorporate a one-way content hash so a different credential at the same location is treated as new. `--only-new` requires a baseline with the same target string. `--only-fixable` means remediation text is present, not that an upgrade is guaranteed safe.
 
 Exit codes: **0** = completed and policy passed, **1** = severity policy failed, **2** = configuration/scanner failure or incomplete required analysis. The default policy is `--fail-on NONE`. Scanner failures take precedence over finding gates. `--timeout` controls the per-process limit (default 900 seconds).
 

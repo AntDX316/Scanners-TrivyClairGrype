@@ -31,6 +31,7 @@ def normalize(scanner, data):
             for v in r.get('Secrets') or []:
                 rows.append(finding(scanner, 'secret', v.get('RuleID'), v.get('Severity'), r.get('Target'),
                     fix='Rotate credential and remove from source/history', title=v.get('Title'), line=v.get('StartLine')))
+                rows[-1]['content_id'] = hashlib.sha256(str(v.get('Match') or '').encode()).hexdigest()
             for v in r.get('Licenses') or []:
                 rows.append(finding(scanner, 'license', v.get('Name'), v.get('Severity'), r.get('Target'),
                     package=v.get('PkgName'), title='License: ' + str(v.get('Name')), fix='Review license obligations'))
@@ -59,6 +60,7 @@ def normalize(scanner, data):
             rows.append(finding(scanner, 'secret-history', v.get('DetectorName'), 'HIGH',
                 git.get('file'), title='Potential credential in Git history' if 'Git' in meta else 'Potential credential in files',
                 line=git.get('line'), fix='Rotate credential; review commit ' + str(git.get('commit') or 'working tree')))
+            rows[-1]['content_id'] = hashlib.sha256(str(v.get('Raw') or '').encode()).hexdigest()
     elif scanner == 'zap':
         for site in data.get('site') or []:
             for v in site.get('alerts') or []:
@@ -74,7 +76,7 @@ def consolidate(rows, baseline=None):
     for row in rows:
         row = dict(row, locations=row.get('locations') or ([row['location']] if row['location'] else []), aliases=row.get('aliases') or [row['rule']])
         # Include ecosystem/version so unrelated packages are never merged merely by CVE.
-        key = tuple(row[k] for k in ('kind', 'rule', 'package', 'version', 'ecosystem', 'location', 'line'))
+        key = tuple(row[k] for k in ('kind', 'rule', 'package', 'version', 'ecosystem', 'location', 'line')) + (row.get('content_id', ''),)
         fingerprint = hashlib.sha256(json.dumps(key).encode()).hexdigest()
         if fingerprint in merged:
             current = merged[fingerprint]
