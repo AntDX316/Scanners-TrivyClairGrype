@@ -1,4 +1,4 @@
-# Multi-layer security scanner
+# SecurityScan-Suite
 
 One command runs Docker-based dependency, code, secret-history, configuration, and license analysis. An optional web target adds OWASP ZAP. Reports combine scanner evidence, prioritize remediation, and compare against previous scans.
 
