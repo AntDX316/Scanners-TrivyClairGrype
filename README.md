@@ -1,376 +1,108 @@
-# Vulnerability Scanning with Trivy, Clair, and Grype
+# Multi-layer security scanner
 
-🚀 **One command to run all three vulnerability scanners using Docker - no local installation required!**
+One command runs Docker-based dependency, code, secret-history, configuration, and license analysis. An optional web target adds OWASP ZAP. Reports combine scanner evidence, prioritize remediation, and compare against previous scans.
 
-Scanners-TrivyClairGrype is a comprehensive, zero-installation vulnerability scanning solution that integrates three powerful security scanners (Trivy, Clair, and Grype) into a single command.
+**Requirements:** Python 3.9+, a running Linux Docker engine, network access for vulnerability databases/rules, and Git for remote repository targets. No Python packages are required. Source is mounted read-only. Official scanner images are pinned by digest in `scanner_images.py`; Trivy and Grype databases use persistent Docker cache volumes.
 
-Simply run 
-.\run_all.bat
- on Windows or 
-./run_all.sh
- on Mac/Linux to automatically scan your codebase, Docker images, or directories for vulnerabilities, secrets, and misconfigurations using Docker containers - no local installation required.
- 
- The tool generates a combined HTML report with findings from all three scanners, making it perfect for developers, DevOps teams, and security professionals who want enterprise-grade vulnerability scanning without the complexity of setting up multiple tools individually.
+## Quick start
 
-## 🎯 **Quick Start - Single Command**
-
-### Windows
-```batch
-.\run_all.bat
-```
-
-### Mac/Linux
-```bash
-./run_all.sh
-```
-
-### Or directly (from within your codebase directory)
-```bash
-python scan_docker.py .
-```
-
-**That's it!** The script will automatically:
-- ✅ Pull Docker images for all scanners
-- ✅ Scan your codebase with Trivy, Grype, and Clair
-- ✅ Generate a combined HTML report
-- ✅ Open results in your browser
-- ✅ Use descriptive container names for easy tracking
-
-## 🏷️ **Container Names**
-
-All containers now have **descriptive, consistent names**:
-
-### Scanner Containers (Temporary)
-- `trivy-scanner-TIMESTAMP` - Trivy vulnerability scanner
-- `grype-scanner-TIMESTAMP` - Grype vulnerability scanner
-
-### Clair Services (Persistent)
-- `clair-postgres-db` - PostgreSQL database for Clair
-- `clair-vulnerability-scanner` - Main Clair scanner service
-- `clair-control-tool` - Clair control utility
-
-**Easy management:**
-```bash
-# See what's running
-docker ps
-
-# View logs
-docker logs clair-vulnerability-scanner
-
-# Stop specific containers
-docker stop trivy-scanner-20250625_070015
-```
-
-## 🔍 **What Gets Scanned**
-
-### ✨ **Comprehensive Coverage with Trivy + Grype**
-
-- 📁 **Source code** (vulnerabilities in dependencies)
-- 🔒 **Secrets** (API keys, passwords hardcoded in code) - *Trivy only*
-- 📦 **Package managers** (npm, pip, maven, gradle, composer, etc.)
-- 📋 **Configuration files** (Dockerfile, Kubernetes YAML, Terraform) - *Trivy only*
-- 🐳 **Container images** (OS and application vulnerabilities)
-- 📊 **Software Bill of Materials (SBOM)** - *Trivy only*
-
-### 🎯 **Scanner Comparison**
-
-| Feature | Trivy | Grype | Clair |
-|---------|-------|-------|-------|
-| **Dependencies** | ✅ | ✅ | ✅ |
-| **Secrets** | ✅ | ❌ | ❌ |
-| **Configs** | ✅ | ❌ | ❌ |
-| **Git Repos** | ✅ | ❌ | ❌ |
-| **Containers** | ✅ | ✅ | ✅ |
-| **Speed** | Fast | Very Fast | Consistent |
-| **Setup** | Easy | Easy | Optional |
-
-**💡 Recommendation**: Trivy + Grype provide excellent coverage for most security needs. Clair is optional for specialized container analysis.
-
-## 📋 **Requirements**
-
-- **Docker** (only requirement!)
-- **Python 3.6+** (usually pre-installed)
-
-### Install Docker
-- **Windows/Mac**: [Docker Desktop](https://www.docker.com/products/docker-desktop)
-- **Linux**: `curl -fsSL https://get.docker.com | sh`
-
-## 🎯 **Usage Examples**
-
-```bash
-# Scan current directory (your project)
-.\run_all.bat
-
-# Scan specific directory
-.\run_all.bat C:\path\to\project
-./run_all.sh /path/to/project
-
-# Scan Docker image
-.\run_all.bat nginx:latest
-./run_all.sh python:3.9
-
-# Scan Git repository (real examples)
-.\run_all.bat https://github.com/your-username/your-repo
-```
-
-## 📊 **What You Get**
-
-### Automated Report Generation
-- **JSON files** for each scanner in `results/` directory
-- **Combined HTML report** with all findings
-- **Severity-based filtering** (Critical, High, Medium, Low)
-- **Package and vulnerability details**
-- **Fix recommendations** when available
-
-### Report Structure
-```
-results/
-├── trivy_results_TIMESTAMP.json
-├── grype_results_TIMESTAMP.json
-├── clair_results_TIMESTAMP.json (when available)
-└── combined_report_TIMESTAMP.html  ← Opens automatically
-```
-
-## 🧪 **Test with Mock Data**
-
-Want to see how the reports look with vulnerabilities? Run the test script:
-
-```bash
-python test_with_mock_data.py
-```
-
-This generates realistic vulnerability data for all three scanners so you can see the beautiful table formatting and severity color coding in action!
-
-## 🚀 **Alternative: Just Use Trivy (Easiest)**
-
-If you want the **simplest solution**, just install Trivy alone - it can do 90% of what you need:
-
-### Windows
 ```powershell
-# Using Chocolatey
-choco install trivy
-
-# Or download directly
-$version = "0.52.2"
-Invoke-WebRequest -Uri "https://github.com/aquasecurity/trivy/releases/download/v$version/trivy_$($version)_Windows-64bit.zip" -OutFile "trivy.zip"
-Expand-Archive trivy.zip -DestinationPath "C:\trivy"
-# Add C:\trivy to PATH
+# Windows: current project or another directory
+.\run_all.bat
+.\run_all.bat C:\path\to\project --no-browser
 ```
 
-### Mac
 ```bash
-brew install trivy
+# Linux / macOS
+./run_all.sh /path/to/project --no-browser
+python3 scan_docker.py https://github.com/your-org/your-repo --no-browser
+python3 scan_docker.py nginx:latest --no-browser
 ```
 
-### Linux
+Both launchers resolve the script relative to themselves and forward arguments. Targets and output paths remain relative to the caller. A Git URL is cloned once with history, then the source scanners inspect that checkout. Authentication uses the host Git setup; credentials are not injected into scanner containers.
+
+## Scan coverage
+
+| Layer | Tool | Directory / Git | Registry image | Extra configuration |
+| --- | --- | --- | --- | --- |
+| Dependency vulnerabilities | Trivy + Grype | Yes | Yes | Databases download automatically |
+| Code patterns | Semgrep | Yes | Skipped | Default `p/security-audit` rules; configurable |
+| Secrets in current files | Trivy | Yes | Yes | Default enabled |
+| Git-history secrets | TruffleHog | Yes, when `.git` exists | Skipped | Filesystem fallback without `.git` |
+| Configuration | Trivy | Yes | Supported image configuration | Default enabled |
+| Licenses | Trivy | Yes | Yes | Default enabled |
+| Running web application | ZAP | Separate `--url` | Separate `--url` | Explicit URL required |
+| Legacy image analysis | Clair | Unsupported | Opt-in | Compatible server required |
+
+License coverage depends on available metadata: a bare Python requirements file may identify versions without supplying package licenses. Full license-file detection is enabled, and recognizable license documents are reported.
+
+Secret verification is disabled in TruffleHog: discovery does not attempt authentication with found credentials. Semgrep uses its registry for default rules but runs code analysis in the local container with metrics disabled. Supply a local YAML via `--semgrep-config` to choose your rules. `--skip-semgrep` and `--skip-trufflehog` disable those layers explicitly, with skips shown in the report.
+
+Registry images must be accessible from inside scanner containers. Local-only images, private-registry credential injection, Git submodule initialization, and authenticated web journeys are not automatically configured.
+
+## Web scanning
+
 ```bash
-curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+# Passive analysis with a one-minute spider; this makes HTTP requests to the site.
+python scan_docker.py . --url https://your-staging-app.example --no-browser
+
+# Explicit active testing for a staging target you control
+python scan_docker.py . --url https://your-staging-app.example --zap-active --no-browser
+
+# A web server on your Docker Desktop host
+python scan_docker.py . --url http://host.docker.internal:8080 --no-browser
 ```
 
-### Scan Everything with Just Trivy
+ZAP defaults to baseline scanning, which crawls the supplied site and passively analyzes traffic. `--zap-active` switches to the full active scanner and can modify application state; use a disposable staging environment. No URLs are inferred from source or automatically tested by CI. Linux hosts may need their own reachable hostname or Docker networking configuration.
+
+## Reports
+
+Each run writes `combined_report_TIMESTAMP.html`, `.json`, and `.sarif` to `results/` (change with `--output`).
+
+- HTML supports text search, severity and baseline filters, every finding, installed versions, remediation, scanner status, and source locations.
+- Deduplication merges identical rule/package/version/ecosystem identities and retains scanner names and discovered locations. It conservatively preserves different advisory identifiers and ecosystems. A single CVE alias supplied by Grype is used to combine its GHSA result with Trivy, retaining original advisory IDs. Ambiguous or missing aliases remain separate.
+- Findings sort by severity, then available remediation. Agreement between tools does not prove exploitability. License results indicate obligations to review, not necessarily a vulnerability.
+- JSON includes stable fingerprints, coverage status, baseline status and policy outcome. SARIF can be imported into compatible code-scanning systems.
+- Missing, partial, and failed scanner results are distinguished from completed scans. Timeouts fail the run; the named container is removed.
+
+Combined exports and Semgrep/TruffleHog output files omit raw secret values and source snippets. **Original Trivy JSON and ZAP output can contain sensitive data.** Keep raw artifacts private. CI uploads only combined reports, whose file paths and finding metadata may still be sensitive in private projects.
+
+## Baselines and CI policy
+
 ```bash
-# Scan your codebase for vulnerabilities and secrets
-trivy fs .
+# Initial report
+python scan_docker.py . --no-browser --output results
 
-# Scan container image
-trivy image nginx:latest
+# Compare to a saved combined JSON report from the same target
+python scan_docker.py . --baseline previous-report.json --fail-on HIGH --only-new --no-browser
 
-# Scan git repository
-trivy repo https://github.com/user/repo
-
-# Scan for secrets only
-trivy fs --scanners secret .
-
-# Scan configuration files
-trivy config .
-
-# Docker version (no installation)
-docker run --rm -v $(pwd):/workspace aquasec/trivy fs /workspace
+# Apply policy only to findings with reported remediation
+python scan_docker.py . --fail-on HIGH --only-fixable --no-browser
 ```
 
-## 🔧 **Advanced Usage**
+Without a baseline, findings are `uncompared`. With a baseline they are `new` or `existing`; absent fingerprints are counted separately in JSON. Absence is not proof of resolution if coverage changed or a scanner failed. Package-version changes intentionally produce new fingerprints. Secret fingerprints incorporate a one-way content hash so a different credential at the same location is treated as new. `--only-new` requires a baseline with the same target string. `--only-fixable` means remediation text is present, not that an upgrade is guaranteed safe.
 
-### Individual Scanner Commands (Docker)
+Exit codes: **0** = completed and policy passed, **1** = severity policy failed, **2** = configuration/scanner failure or incomplete required analysis. The default policy is `--fail-on NONE`. Scanner failures take precedence over finding gates. `--timeout` controls the per-process limit (default 900 seconds).
 
-**Trivy:**
+The `Security scans` GitHub Actions workflow runs on pull requests, main pushes, weekly, and manually. It checks code, dependencies, licenses and full Git history. Successful default-branch runs save a baseline; later scans fail on **new High/Critical** findings. The first scan establishes a baseline without a severity gate. Cache eviction can cause a fresh baseline; scanner execution failures still fail. Pull requests never save the trusted default-branch baseline. Reports are retained for 14 days. Unit regression CI runs on Windows/Linux and Python 3.9/3.14.
+
+## Legacy entry points
+
+`scan_docker.py` is the main CLI. `security_scan.py` exposes the same expanded workflow. `scan_all.py` remains the older local-binary runner with shared HTML escaping; it does not have the new multi-layer orchestration or CI policy. The old `test_with_mock_data.py` demonstrates legacy report rendering.
+
+`--clair` and `docker-compose.yml` remain a legacy third-party integration, disabled by default and not migrated to modern Clair v4. A compatible server is required. This update does not claim verified Clair coverage.
+
+## Validation and maintenance
+
 ```bash
-# Scan filesystem/codebase
-docker run --rm --name trivy-scan -v $(pwd):/workspace aquasec/trivy fs /workspace
-
-# Scan for secrets in code
-docker run --rm --name trivy-secrets -v $(pwd):/workspace aquasec/trivy fs --scanners secret /workspace
-
-# Scan container image
-docker run --rm --name trivy-image aquasec/trivy image nginx:latest
-
-# Scan git repository
-docker run --rm --name trivy-repo aquasec/trivy repo https://github.com/user/repo
+python -m unittest discover -p 'test_*.py' -v
+python -m compileall -q scan_docker.py security_scan.py findings.py reporting.py
 ```
 
-**Grype:**
-```bash
-# Scan directory
-docker run --rm --name grype-scan -v $(pwd):/workspace anchore/grype dir:/workspace
+Update image digests deliberately in `scanner_images.py`, then rerun the tests and a live integration scan. Image pinning stabilizes tooling; vulnerability databases and remote Semgrep rules continue updating. Disk caches use Docker volumes `security-trivy-cache` and `security-grype-cache`.
 
-# Scan container image
-docker run --rm --name grype-image anchore/grype nginx:latest
-```
-
-**Clair:**
-```bash
-# Start Clair services
-docker-compose up -d
-
-# Check status
-curl http://localhost:6060/health
-
-# Stop services
-docker-compose down
-```
-
-## 🛠️ **Local Installation (Alternative)**
-
-If you prefer to install scanners locally instead of using Docker:
-
-### Windows (PowerShell)
-```powershell
-# Automated installer
-.\install_scanners.ps1
-
-# Or manual
-choco install trivy
-# Download Grype from GitHub releases
-```
-
-### macOS
-```bash
-# Homebrew
-brew install trivy
-brew tap anchore/grype && brew install grype
-```
-
-### Linux
-```bash
-# Install scripts
-curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh
-```
-
-Then use the local scanner script:
-```bash
-python scan_all.py .
-```
-
-## 🔍 **What Gets Detected**
-
-### Vulnerabilities
-- Known CVEs in dependencies
-- Outdated packages with security issues
-- OS-level vulnerabilities
-- Language-specific package vulnerabilities
-
-### Secrets & Sensitive Data
-- API keys and tokens
-- Database credentials
-- Private keys
-- Hardcoded passwords
-- AWS access keys
-- JWT tokens
-
-### Misconfigurations
-- Dockerfile best practices
-- Kubernetes security issues
-- Infrastructure as Code problems
-- Insecure configurations
-
-## 📚 **Scanner Details**
-
-### 🔍 **Trivy** (Most Comprehensive)
-- **Best for**: Complete security scanning
-- **Scans**: Code, containers, configs, secrets
-- **Strengths**: Most features, active development
-- **Output**: Detailed CVE information
-
-### 🎯 **Grype** (Fast & Lightweight)
-- **Best for**: Quick vulnerability checks
-- **Scans**: Containers, filesystems
-- **Strengths**: Speed, simple output
-- **Output**: Clean vulnerability list
-
-### 🐳 **Clair** (Deep Container Analysis)
-- **Best for**: Container layer analysis
-- **Scans**: Container images (layer by layer)
-- **Strengths**: Deep image inspection
-- **Output**: Layer-specific vulnerabilities
-
-## 🆘 **Troubleshooting**
-
-### Docker Issues
-```bash
-# Check Docker is running
-docker --version
-docker ps
-
-# Pull images manually if needed
-docker pull aquasec/trivy:latest
-docker pull anchore/grype:latest
-```
-
-### Permission Issues (Linux/Mac)
-```bash
-# Make script executable
-chmod +x run_all.sh
-
-# Run with sudo if needed
-sudo ./run_all.sh
-```
-
-### Windows PowerShell Execution Policy
-```powershell
-# If scripts are blocked
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-### Container Management
-```bash
-# See all containers with descriptive names
-docker ps -a
-
-# Remove stopped scanner containers
-docker container prune
-
-# Stop and remove Clair services
-docker-compose down -v
-```
-
-## 🌟 **Features**
-
-- ✅ **Zero local installation** (Docker-only approach)
-- ✅ **Single command execution**
-- ✅ **Cross-platform** (Windows, Mac, Linux)
-- ✅ **Automatic report generation**
-- ✅ **Browser integration**
-- ✅ **Multiple scan targets** (code, containers, repos)
-- ✅ **Combined results** from all scanners
-- ✅ **Professional HTML reports**
-- ✅ **Descriptive container names** for easy management
-- ✅ **Timestamp-based tracking**
-
-## 🤝 **Contributing**
-
-Feel free to submit issues and enhancement requests!
-
-## 📚 **Additional Resources**
-
-- [Trivy Documentation](https://aquasecurity.github.io/trivy/)
-- [Grype Documentation](https://github.com/anchore/grype)
-- [Clair Documentation](https://quay.github.io/clair/)
-- [Docker Documentation](https://docs.docker.com/)
-
----
-
-**🎉 Ready to scan? Just run `.\run_all.bat` (Windows) or `./run_all.sh` (Mac/Linux)!**
+Documentation: [Trivy](https://trivy.dev/) · [Grype](https://oss.anchore.com/docs/) · [Semgrep](https://semgrep.dev/docs/) · [TruffleHog](https://github.com/trufflesecurity/trufflehog) · [ZAP](https://www.zaproxy.org/docs/docker/baseline-scan/)
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for full details.
+See [LICENSE](LICENSE).

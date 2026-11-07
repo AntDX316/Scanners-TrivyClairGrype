@@ -78,3 +78,6 @@ clair-config/
 *.pem
 secrets/
 credentials/
+
+# Local scan baselines
+.security-baseline/
