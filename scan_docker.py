@@ -58,7 +58,7 @@ class DockerVulnerabilityScanner:
                 ]
             elif os.path.isdir(self.target):
                 # Local directory scan
-                target_abs = os.path.abspath(self.target)
+                target_abs = str(Path(self.target).resolve())
                 cmd = [
                     "docker", "run", "--rm",
                     "--name", f"trivy-scanner-{self.timestamp}",
@@ -118,7 +118,7 @@ class DockerVulnerabilityScanner:
                 return None
             elif os.path.isdir(self.target):
                 # Local directory scan
-                target_abs = os.path.abspath(self.target)
+                target_abs = str(Path(self.target).resolve())
                 cmd = [
                     "docker", "run", "--rm",
                     "--name", f"grype-scanner-{self.timestamp}",
