@@ -1,6 +1,5 @@
 # SecurityScan-Suite
 
-Made by [@AntDX316](https://github.com/AntDX316)
 
 ![SecurityScan-Suite example report](docs/preview.jpg)
 
